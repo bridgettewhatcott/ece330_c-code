@@ -1,0 +1,96 @@
+/**
+ * ********************************************************************
+ * @file      math.s
+ * @author    Dean Wilkinson
+ * @brief     Assembly callable functions.
+ *            This module performs:
+ *                - Power function
+ *                - Resistor divider calculation
+ *                -
+ *                -
+ *
+ *
+ * ********************************************************************
+ */
+
+.syntax unified
+
+.cpu cortex-m4
+
+.fpu softvfp
+
+.thumb
+
+
+.global  power
+
+.p2align 2
+
+.type power,%function
+
+
+power:   // r0=base/result, r1=exponent, r2=calculation
+
+    .fnstart
+
+base .req r0   // .req is the equivalent to RN in Eclipse compiler
+
+exponent .req r1
+
+scratchpad .req r2
+
+        MOV scratchpad,base  // MOV r2, r0 //load r0 with base value to initialize for multiply
+
+        CMP base,#0      // Is the base zero?
+
+        BEQ done         // Yes so go to done
+
+        CMP exponent,#0  // Is the exponent zero?
+
+        MOV scratchpad,#1  //Yes, set the answer to 1
+
+        BEQ done         // Yes so go to done
+
+        MOV scratchpad,base  // MOV r2, r0 //load r0 with base value to initialize for multiply
+
+loop:   SUBS exponent,exponent,1  // SUBS r1,r1, 1  //#1 and 1 are equivalent expressions of a decimal constant
+
+        BEQ done
+
+        MUL scratchpad,scratchpad,base // MUL r2,r2,r0
+
+        B loop
+
+done:   MOV base,scratchpad //MOV r0,r2
+
+        BX lr
+
+    .fnend
+
+
+.global res_div
+
+.p2align 2
+
+.type res_div,%function
+
+
+res_div:    // r0=first resistor, r1=second resistor, r2=calculation
+
+    .fnstart
+
+
+        MUL r2,r0,r1       // r2 = r1 * r2
+
+        MOV r3,#100        // r3 = 100
+
+        MUL r2,r2,r3       // r2 = 100 * (r1 * r2)
+
+        ADD r3,r0,r1       // r3 = r1 + r2
+
+        UDIV r0,r2,r3      // answer = 100 * (r1 * r2) / (r1 + r2)
+
+        BX lr              // Return answer in r0
+
+
+    .fnend
